@@ -22,6 +22,15 @@
                     </div>
                 </div>
             </div>
+            <div class="col-md-4">
+                <div class="card ptm-card admin-card">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">🔄 Sync ISAMS Data</h5>
+                        <p class="card-text">Import students and parents from ISAMS</p>
+                        <a href="?page=sync-isams" class="btn btn-ptm btn-ptm-primary">Run Sync</a>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>

@@ -45,11 +45,29 @@ switch ($page) {
         }
         include __DIR__ . '/../app/views/admin/dashboard.php';
         break;
+    
+    case 'sync-isams':
+        // Admin only!
+        if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
+            header('Location: ?page=admin-login');
+            exit;
+        }
+        include __DIR__ . '/admin/sync_isams.php';
+        break;
         
     case 'logout':
         session_destroy();
         header('Location: ?page=login');
         exit;
+        break;
+
+    case 'sync-subjects':
+        // Admin only!
+        if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
+            header('Location: ?page=admin-login');
+            exit;
+        }
+        include __DIR__ . '/sync_subjects.php';
         break;
         
     default:
