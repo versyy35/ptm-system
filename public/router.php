@@ -67,7 +67,7 @@ switch ($page) {
             header('Location: ?page=admin-login');
             exit;
         }
-        include __DIR__ . '/sync_subjects.php';
+        include __DIR__ . '/admin/sync_subjects.php';
         break;
         
     default:

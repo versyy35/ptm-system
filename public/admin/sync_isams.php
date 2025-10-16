@@ -4,7 +4,7 @@
  * Run this to import students and parents from ISAMS into PTM database
  * IMPORTANT: Only run this when you need to sync data!
  */
-require_once __DIR__ . '/../app/config/config.php';
+require_once __DIR__ . '/../../app/config/config.php';
 
 echo "<!DOCTYPE html>
 <html>
