@@ -1,0 +1,16 @@
+{
+    "name": "school/ptm-portal",
+    "description": "Parent-Teacher Meeting Portal",
+    "type": "project",
+    "require": {
+        "php": ">=7.4"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "app/"
+        }
+    },
+    "config": {
+        "vendor-dir": "vendor"
+    }
+}
