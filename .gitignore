@@ -1,0 +1,32 @@
+# === PHP & Composer ===
+vendor/
+composer.lock
+
+# === Environment / Config ===
+config.php
+.env
+.env.local
+*.env
+
+# === System Files ===
+.DS_Store
+Thumbs.db
+
+# === Logs & Cache ===
+*.log
+*.cache
+*.tmp
+cache/
+logs/
+storage/
+
+# === IDE & Editor junk ===
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# === OS / Misc ===
+node_modules/
+npm-debug.log*
+yarn-error.log*
