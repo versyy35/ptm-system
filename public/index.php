@@ -1,4 +1,11 @@
 <?php
+// If page parameter exists, use router
+if (isset($_GET['page'])) {
+    require_once __DIR__ . '/router.php';
+    exit;
+}
+
+// Otherwise show landing page
 session_start();
 require_once __DIR__ . '/../app/config/config.php';
 ?>
@@ -126,7 +133,8 @@ require_once __DIR__ . '/../app/config/config.php';
                             <div class="text-primary mb-3" style="font-size: 4rem;">👪</div>
                             <h4 class="fw-bold">Parents</h4>
                             <p class="text-muted mb-4">Book meetings and track progress</p>
-                            <a href="?page=login" class="btn btn-primary btn-lg w-100">Parent Login</a>
+                            <a href="?page=login" class="btn btn-primary btn-lg w-100 disabled">Parent Login (MSP)</a>
+                            <small class="text-muted">Via Main School Portal</small>
                         </div>
                     </div>
                 </div>
@@ -137,7 +145,7 @@ require_once __DIR__ . '/../app/config/config.php';
                             <div class="text-info mb-3" style="font-size: 4rem;">⚙️</div>
                             <h4 class="fw-bold">Administrators</h4>
                             <p class="text-muted mb-4">Manage the entire system</p>
-                            <a href="?page=login" class="btn btn-info btn-lg w-100 text-white">Admin Login</a>
+                            <a href="?page=admin-login" class="btn btn-info btn-lg w-100 text-white">Admin Login</a>
                         </div>
                     </div>
                 </div>

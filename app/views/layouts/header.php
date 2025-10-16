@@ -13,6 +13,17 @@
             <a class="navbar-brand" href="?page=home">
                 <strong>🏫 <?php echo APP_NAME; ?></strong>
             </a>
+            
+            <?php if (isset($_SESSION['role'])): ?>
+            <div class="navbar-nav ms-auto">
+                <span class="navbar-text text-white me-3">
+                    Welcome, <strong><?php echo htmlspecialchars($_SESSION['display_name'] ?? 'User'); ?></strong>
+                </span>
+                <a href="?page=logout" class="btn btn-outline-light btn-sm">
+                    🚪 Logout
+                </a>
+            </div>
+            <?php endif; ?>
         </div>
     </nav>
     
