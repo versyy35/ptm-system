@@ -69,6 +69,14 @@ switch ($page) {
         }
         include __DIR__ . '/admin/sync_subjects.php';
         break;
+    case 'view-subjects':
+        // Admin only!
+        if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
+            header('Location: ?page=admin-login');
+            exit;
+        }
+        include __DIR__ . '/admin/view_subjects.php';
+        break;
         
     default:
         include __DIR__ . '/../app/views/errors/404.php';

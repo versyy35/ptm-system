@@ -31,6 +31,24 @@
                     </div>
                 </div>
             </div>
+            <div class="col-md-4">
+                <div class="card ptm-card admin-card">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">🔄 Sync Subjects</h5>
+                        <p class="card-text">Import subjects and teachers' data from ISAMS</p>
+                        <a href="?page=sync-subjects" class="btn btn-ptm btn-ptm-primary">Run Sync</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card ptm-card admin-card">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">👁️ View Imported Subjects</h5>
+                        <p class="card-text">View all imported subjects pulled from ISAMS API</p>
+                        <a href="?page=view-subjects" class="btn btn-ptm btn-ptm-primary">View Subjects</a>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>

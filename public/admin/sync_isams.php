@@ -1,8 +1,8 @@
 <?php
 /**
- * ISAMS Data Sync Script
+ * ISAMS Data Sync Script - UPDATED
  * Run this to import students and parents from ISAMS into PTM database
- * IMPORTANT: Only run this when you need to sync data!
+ * Now populates denormalized name/email fields for performance
  */
 require_once __DIR__ . '/../../app/config/config.php';
 
@@ -23,7 +23,7 @@ echo "<!DOCTYPE html>
 <body>
 <div class='container'>";
 
-echo "<h2>🔄 ISAMS Data Sync</h2>";
+echo "<h2>ISAMS Data Sync</h2>";
 echo "<p>Syncing student and parent data from ISAMS...</p>";
 echo "<hr>";
 
@@ -31,7 +31,7 @@ echo "<hr>";
 $apiKey = ISAMS_API_KEY;
 $url = ISAMS_API_URL . "?apiKey=$apiKey";
 
-echo "<p class='info'>📡 Connecting to ISAMS API...</p>";
+echo "<p class='info'>Connecting to ISAMS API...</p>";
 
 $ch = curl_init($url);
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -40,7 +40,7 @@ curl_setopt($ch, CURLOPT_TIMEOUT, 60);
 $response = curl_exec($ch);
 
 if (curl_errno($ch)) {
-    echo "<p class='error'>❌ cURL error: " . curl_error($ch) . "</p>";
+    echo "<p class='error'>cURL error: " . curl_error($ch) . "</p>";
     echo "</div></body></html>";
     curl_close($ch);
     exit;
@@ -50,7 +50,7 @@ $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 curl_close($ch);
 
 if ($httpCode !== 200) {
-    echo "<p class='error'>❌ ISAMS API returned HTTP code: $httpCode</p>";
+    echo "<p class='error'>ISAMS API returned HTTP code: $httpCode</p>";
     echo "</div></body></html>";
     exit;
 }
@@ -58,19 +58,21 @@ if ($httpCode !== 200) {
 // Parse XML
 $xml = simplexml_load_string($response);
 if (!$xml) {
-    echo "<p class='error'>❌ Failed to parse XML from ISAMS</p>";
+    echo "<p class='error'>Failed to parse XML from ISAMS</p>";
     echo "</div></body></html>";
     exit;
 }
 
-echo "<p class='success'>✅ Successfully connected to ISAMS</p>";
+echo "<p class='success'>Successfully connected to ISAMS</p>";
 
 $studentsProcessed = 0;
+$studentsUpdated = 0;
 $parentsProcessed = 0;
+$parentsUpdated = 0;
 $linksCreated = 0;
 
 // Process Students
-echo "<h3>👨‍🎓 Processing Students...</h3>";
+echo "<h3>Processing Students...</h3>";
 $pupilMap = [];
 $currentPupilBlocks = $xml->xpath('//CurrentPupils');
 
@@ -91,35 +93,45 @@ foreach ($pupilMap as $schoolId => $pupil) {
     $surname = trim((string)$pupil->Surname);
     $form = trim((string)$pupil->Form);
     $ncYear = trim((string)$pupil->NCYear);
+    $pupilId = (int)$pupil['Id']; // Get ISAMS Pupil ID
     
     if (empty($email)) {
-        echo "<p>⚠️ Skipping student $schoolId - no email</p>";
+        // Students without email are still valid, just skip logging
         continue;
     }
     
     $fullName = trim("$forename $surname");
     
-    // Check if student exists
-    $stmt = $pdo->prepare("SELECT id FROM students WHERE name = ? OR grade = ? OR class = ?");
-    $stmt->execute([$fullName, $ncYear, $form]);
+    // Check if student exists by name or ISAMS ID
+    $stmt = $pdo->prepare("SELECT id FROM students WHERE name = ? OR isams_pupil_id = ?");
+    $stmt->execute([$fullName, $pupilId]);
     $existing = $stmt->fetch();
     
     if (!$existing) {
         // Insert new student (parent_id will be NULL for now)
         $stmt = $pdo->prepare("
-        INSERT INTO students (name, grade, class, parent_id, created_at)
-        VALUES (?, ?, ?, NULL, NOW())
+            INSERT INTO students (name, grade, class, parent_id, isams_pupil_id, created_at)
+            VALUES (?, ?, ?, NULL, ?, NOW())
         ");
-        $stmt->execute([$fullName, $ncYear, $form]);
-        echo "<p class='success'>✅ Added student: $fullName (Form: $form, Year: $ncYear)</p>";
+        $stmt->execute([$fullName, $ncYear, $form, $pupilId]);
+        echo "<p class='success'>Added student: $fullName (Form: $form, Year: $ncYear)</p>";
         $studentsProcessed++;
     } else {
-        echo "<p class='info'>ℹ️ Student exists: $fullName</p>";
+        // Update existing student with latest data
+        $stmt = $pdo->prepare("
+            UPDATE students 
+            SET grade = ?, class = ?, isams_pupil_id = ?
+            WHERE id = ?
+        ");
+        $stmt->execute([$ncYear, $form, $pupilId, $existing['id']]);
+        $studentsUpdated++;
     }
 }
 
+echo "<p class='info'>New students: $studentsProcessed, Updated: $studentsUpdated</p>";
+
 // Process Parents
-echo "<br><h3>👨‍👩‍👧‍👦 Processing Parents...</h3>";
+echo "<br><h3>Processing Parents...</h3>";
 
 $processedParents = [];
 
@@ -148,27 +160,29 @@ if (isset($xml->PupilManager->Contacts->Contact)) {
         $existingUser = $stmt->fetch();
         
         if (!$existingUser) {
-            // Create new parent
+            // Create new parent with denormalized fields
             try {
                 $pdo->beginTransaction();
                 
+                // Insert user
                 $stmt = $pdo->prepare("
-                    INSERT INTO users (email, name, role, created_at)
-                    VALUES (?, ?, 'parent', NOW())
+                    INSERT INTO users (email, name, role, is_active, created_at)
+                    VALUES (?, ?, 'parent', 1, NOW())
                 ");
                 $stmt->execute([$email, $fullName]);
                 $userId = $pdo->lastInsertId();
                 
+                // Insert parent WITH denormalized name and email
                 $stmt = $pdo->prepare("
-                    INSERT INTO parents (user_id, phone)
-                    VALUES (?, ?)
+                    INSERT INTO parents (user_id, name, email, phone, created_at)
+                    VALUES (?, ?, ?, ?, NOW())
                 ");
-                $stmt->execute([$userId, $mobile]);
+                $stmt->execute([$userId, $fullName, $email, $mobile]);
                 $parentId = $pdo->lastInsertId();
                 
                 $pdo->commit();
                 
-                echo "<p class='success'>✅ Added parent: $fullName ($email)</p>";
+                echo "<p class='success'>Added parent: $fullName ($email)</p>";
                 $parentsProcessed++;
                 
                 // Link children
@@ -189,7 +203,7 @@ if (isset($xml->PupilManager->Contacts->Contact)) {
                                 // Update student with parent_id
                                 $stmt = $pdo->prepare("UPDATE students SET parent_id = ? WHERE id = ?");
                                 $stmt->execute([$parentId, $student['id']]);
-                                echo "<p class='info'>&nbsp;&nbsp;&nbsp;🔗 Linked to child: $studentName</p>";
+                                echo "<p class='info'>&nbsp;&nbsp;&nbsp;Linked to child: $studentName</p>";
                                 $linksCreated++;
                             }
                         }
@@ -198,24 +212,45 @@ if (isset($xml->PupilManager->Contacts->Contact)) {
                 
             } catch (Exception $e) {
                 $pdo->rollBack();
-                echo "<p class='error'>❌ Error creating parent $email: " . $e->getMessage() . "</p>";
+                echo "<p class='error'>Error creating parent $email: " . $e->getMessage() . "</p>";
             }
         } else {
-            echo "<p class='info'>ℹ️ Parent exists: $fullName ($email)</p>";
+            // Update existing parent's denormalized fields
+            if ($existingUser['parent_id']) {
+                $stmt = $pdo->prepare("
+                    UPDATE parents 
+                    SET name = ?, email = ?, phone = ?
+                    WHERE id = ?
+                ");
+                $stmt->execute([$fullName, $email, $mobile, $existingUser['parent_id']]);
+                $parentsUpdated++;
+                
+                // Also update user table to keep in sync
+                $stmt = $pdo->prepare("
+                    UPDATE users 
+                    SET name = ?
+                    WHERE id = ?
+                ");
+                $stmt->execute([$fullName, $existingUser['id']]);
+            }
         }
     }
 }
 
+echo "<p class='info'>New parents: $parentsProcessed, Updated: $parentsUpdated</p>";
+
 // Summary
 echo "<div class='summary'>";
-echo "<h3>📊 Sync Summary</h3>";
-echo "<p><strong>👨‍🎓 Students added:</strong> $studentsProcessed</p>";
-echo "<p><strong>👨‍👩‍👧‍👦 Parents added:</strong> $parentsProcessed</p>";
-echo "<p><strong>🔗 Parent-Child links created:</strong> $linksCreated</p>";
-echo "<br><p class='success'><strong>✅ Sync completed successfully!</strong></p>";
+echo "<h3>Sync Summary</h3>";
+echo "<p><strong>Students added:</strong> $studentsProcessed</p>";
+echo "<p><strong>Students updated:</strong> $studentsUpdated</p>";
+echo "<p><strong>Parents added:</strong> $parentsProcessed</p>";
+echo "<p><strong>Parents updated:</strong> $parentsUpdated</p>";
+echo "<p><strong>Parent-Child links created:</strong> $linksCreated</p>";
+echo "<br><p class='success'><strong>Sync completed successfully!</strong></p>";
 echo "</div>";
 
-echo "<br><p><a href='?page=admin'>← Back to Admin Dashboard</a></p>";
+echo "<br><p><a href='?page=admin'>Back to Admin Dashboard</a></p>";
 
 echo "</div></body></html>";
 ?>
