@@ -27,5 +27,5 @@ function loadEnv($filePath) {
 }
 
 // Load the .env file
-loadEnv(__DIR__ . '/../../../.env');
+loadEnv(__DIR__ . '/../../.env');
 ?>
