@@ -59,13 +59,11 @@ switch ($page) {
             'sync-subjects' => 'sync_subjects.php',
             'view-subjects' => 'view_subjects.php',
             'sync-isams' => 'sync_isams.php',
-            'sync-subjects' => 'sync_subjects.php',
-            'view-subjects' => 'view_subjects.php',
             'api-diagnostics' => 'api_diagnostics.php',
             'xml_explore' => 'explore_xml_structure.php',
             'fix-teacher-email' => 'fix_teacher_emails.php'
         ];
-        include __DIR__ . '../admin/' . $fileMap[$page];
+        include __DIR__ . '/admin/' . $fileMap[$page];
         break;
         
     case 'logout':
