@@ -36,7 +36,7 @@ echo "<p>Importing teachers, subjects, teaching sets and enrollments...</p><hr>"
 $startTime = microtime(true);
 
 // Get ISAMS XML data
-$apiKey = '34734E38-1175-4969-966B-960A2E928CAF';
+$apiKey = SUBJECTS_API_KEY;
 $url = "https://isams.kl.his.edu.my/api/batch/1.0/xml.ashx?apiKey=$apiKey";
 
 echo "<p class='info'>Connecting to ISAMS API...</p>";
