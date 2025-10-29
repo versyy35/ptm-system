@@ -9,7 +9,7 @@
                     <div class="card-body text-center">
                         <h5 class="card-title">📅 Manage Meetings</h5>
                         <p class="card-text">Create and schedule PTM meetings</p>
-                        <a href="#" class="btn btn-ptm btn-ptm-primary">Get Started</a>
+                        <a href="?page=manage-meetings" class="btn btn-ptm btn-ptm-primary">Get Started</a>
                     </div>
                 </div>
             </div>
@@ -18,7 +18,7 @@
                     <div class="card-body text-center">
                         <h5 class="card-title">👥 Manage Users</h5>
                         <p class="card-text">Teachers, parents, and students</p>
-                        <a href="#" class="btn btn-ptm btn-ptm-primary">Manage</a>
+                        <a href="?page=management" class="btn btn-ptm btn-ptm-primary">Manage</a>
                     </div>
                 </div>
             </div>

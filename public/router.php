@@ -39,6 +39,11 @@ switch ($page) {
         include __DIR__ . '/../app/views/admin/dashboard.php';
         break;
     
+    case 'manage-meetings':
+    case 'management':
+    case 'student-management':
+    case 'parent-management':
+    case 'teacher-management':
     case 'admin-sync-subjects':
     case 'sync-subjects':
     case 'view-subjects':
@@ -49,6 +54,11 @@ switch ($page) {
         SSOMiddleware::requireAdmin();
         
         $fileMap = [
+            'parent-management' => 'parent_management.php',
+            'student-management' => 'student_management.php',
+            'teacher-management' => 'teacher_management.php',
+            'management' => 'management.php',
+            'manage-meetings' => 'manage_meetings.php',
             'sync-subjects' => 'sync_subjects.php',
             'admin-sync-subjects' => 'sync_subjects.php',
             'view-subjects' => 'view_subjects.php',
